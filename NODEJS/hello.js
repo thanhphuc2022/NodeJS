@@ -1,5 +1,5 @@
 const express = require('express'); //import thu vien
-const app = express();
+const app = express(); //tạo hàm
 const port = 8080;
 
 // app.get('/', (req, res) => {
@@ -9,12 +9,12 @@ const port = 8080;
 //     res.send('about ne')
 // })
 
-app.set('view engine', 'ejs');
-app.set('views', './views');
+app.set('view engine', 'ejs'); //thiết lập view engine là EJS.
+app.set('views', './views'); //cấu hình sử dụng tài nguyên trong thư mục views
 app.use(express.static(__dirname + '/public'));
 
-app.get('/', (req, res) => {
-    res.render('index');
+app.get('/', (req, res) => { //định nghĩa route trang chủ
+    res.render('index'); //trả về trang index
 })
 
 // ()=> : function()
