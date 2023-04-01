@@ -16,6 +16,10 @@ function Register(request, response) {
         username: username
     })
         .then(function (data) {
+            if (username == '' || password == '' || repassword == '') {
+                return response.json({ success: false, message: 'vui long dien day du thong tin' });
+                errRgt++
+            }
             if (data) {
                 return response.json({ success: false, message: 'username da duoc su dung' });
                 errRgt++
@@ -30,10 +34,6 @@ function Register(request, response) {
             }
             if (!passwordRegex.test(password)) {
                 return response.json({ success: false, message: 'mat khau it nhat 8 ki tu ' });
-                errRgt++
-            }
-            if (username == '' || password == '' || repassword == '') {
-                return response.json({ success: false, message: 'vui long dien day du thong tin' });
                 errRgt++
             }
             if (errRgt == 0) {
