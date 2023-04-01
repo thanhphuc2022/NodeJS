@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<style>
+    table,
+    th,
+    td {
+        border: 1px solid black;
+    }
+</style>
+
+<body>
+
+    <h2>A basic HTML table</h2>
+
+    <table style="width:100%">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for(let i=0; i<datas.length; i++) {%>
+                <tr>
+                    <th>
+                        <%= datas[i].username %>
+                    </th>
+                    <th>
+                        <%= datas[i].password %>
+                    </th>
+                    <th>
+                        <form action="/account/edit/<%= datas[i].id %>" method="get">
+                            <button type="submit">edit</button>
+                        </form>
+                        <form action="/account/delete/<%= datas[i].id %>" method="post">
+                            <!-- <input type="text" hidden value="<%= datas[i].id %>" /> -->
+                            <button type="submit">Delete</button>
+                        </form>
+                    </th>
+                </tr>
+                <% } %>
+        </tbody>
+    </table>
+
+    <form action="/account/ss" method="post">
+        <label for="fname">First name:</label><br>
+        <input type="text" id="fname" name="username"><br>
+        <label for="lname">Password:</label><br>
+        <input type="text" id="lname" name="password"><br><br>
+        <input type="submit" value="Create">
+    </form>
+
+    <% if (typeof errAcc !=='undefined' ) { %>
+        <div class="alert alert-success">
+            <%= errAcc %>
+        </div>
+        <% } %>
+</body>
+
+</html>

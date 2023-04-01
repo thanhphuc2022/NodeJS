@@ -29,7 +29,14 @@
             </nav>
             <article>
                 <h2>TRANG CHỦ</h2>
-                <p>hello world</p>
+                <form action="/login" method="post">
+                    <label for="">username</label>
+                    <input type="text" name="username" />
+                    <label for="">password</label>
+                    <input type="text" name="password" />
+                    <button type="submit">Submit</button>
+                    <label for=""></label>
+                </form>
             </article>
         </section>
         <%- include("../views/footer.ejs")%>
