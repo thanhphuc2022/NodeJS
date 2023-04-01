@@ -12,7 +12,7 @@ router.get('/', accountController.getAccount);
 
 router.get('/:id', accountController.getAccountID); //lay theo id
 
-router.get('/', accountController.getAccountCreate);
+router.get('/aa', accountController.getAccountCreate);
 
 router.post('/ss', accountController.postAccount);
 

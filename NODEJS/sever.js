@@ -25,7 +25,7 @@ var accountRouter = require('./routers/accountRouter')
 // app.get('/index', (req, res) => { //định nghĩa route trang chủ
 //     res.render('index'); //trả về trang index
 // })
-app.use('/api', accountRouter)
+// app.use('/api', accountRouter)
 app.use('/api/account', accountRouter)
 
 // ()=> : function()

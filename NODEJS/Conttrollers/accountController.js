@@ -6,7 +6,11 @@ const AccountModel = require('../Models/accountModel')//chứa khung schema acco
 function Register(request, response) {
     var username = request.body.username
     var password = request.body.password
+    var repassword = request.body.repassword
 
+    const usernameRegex = /^[a-zA-Z0-9_.]{3,20}$/;
+    const passwordRegex = /^.{8,}$/;
+    errRgt = 0
     //bat su kien trung ten dang nhap
     AccountModel.findOne({
         username: username
@@ -14,7 +18,25 @@ function Register(request, response) {
         .then(function (data) {
             if (data) {
                 return response.json({ success: false, message: 'username da duoc su dung' });
-            } else {
+                errRgt++
+            }
+            if (password != repassword) {
+                return response.json({ success: false, message: 'Mat khau khong trung khop' });
+                errRgt++
+            }
+            if (!usernameRegex.test(username)) {
+                return response.json({ success: false, message: 'username khong hop le' });
+                errRgt++
+            }
+            if (!passwordRegex.test(password)) {
+                return response.json({ success: false, message: 'mat khau it nhat 8 ki tu ' });
+                errRgt++
+            }
+            if (username == '' || password == '' || repassword == '') {
+                return response.json({ success: false, message: 'vui long dien day du thong tin' });
+                errRgt++
+            }
+            if (errRgt == 0) {
                 AccountModel.create({
                     username: username,
                     password: password
@@ -181,21 +203,6 @@ function createJob(request, response) {
     var id = request.params.id
     var job = request.body.job
 
-    // AccountModel.findById({
-    //     id: id
-    // })
-    //     .then(function (data) {
-    //         if (!data) {
-    //             response.json('Loi truy van')
-    //         }
-    //         else {
-    //             return AccountModel.updateOne({
-    //                 // toDo: job
-    //                 $push: { toDo: job }
-    //             })
-    //         }
-    //     })
-
     AccountModel.updateOne(
         { _id: id },
         { $push: { toDo: job } }
@@ -220,19 +227,15 @@ function updateJob(request, response) {
         .then(function (data) {
             response.json('update job thanh cong ')
         })
-        // AccountModel.find({}).then((response) => {
-        //     AccountModel.updateOne(
-        //         { id: id },
-        //         { $push: { toDo: job } },
-        //         (err, result) => {
-        //             if (err) throw err;
-        //             // console.log(`Updated ${result.modifiedCount} document.`);
-        //         }
-        //     )
-        // })
         .catch((err) => {
             response.status(500).json('that bai')
         })
+
+
+
+
+
+
 }
 
 module.exports = {
