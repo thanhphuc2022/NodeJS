@@ -5,8 +5,8 @@ var bodyParser = require('body-parser');
 
 var accountRouter = require('./routers/accountRouter') //lấy router từ các hàm CRUD
 
-const connectDatabase = require('./Services/connectMongodb')//goi ham connect database ket noi voi mongodb
-connectDatabase();
+// const connectDatabase = require('./Services/connectMongodb')//goi ham connect database ket noi voi mongodb
+// connectDatabase();
 
 app.set('view engine', 'ejs'); //thiết lập view engine là EJS.
 app.set('views', './views'); //cấu hình sử dụng tài nguyên trong thư mục views

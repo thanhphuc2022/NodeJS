@@ -1,11 +1,19 @@
 //ham ket noi csdl
 const mongoose = require('mongoose');
-async function connectDatabase() {
+
+const URL = 'mongodb+srv://thanhphuc:thanhphuc1204@demonodejs.r29hvtz.mongodb.net/demoNodejs?retryWrites=true&w=majority'
+
+const connectDB = async () => {
     try {
-        await mongoose.connect('mongodb://127.0.0.1:27017/demoNodejs')
-        console.log('ket noi database thanh cong');
+        await mongoose.connect(
+            URL,
+            { useNewUrlParser: true, useUnifiedTopology: true }
+        )
+        console.log('Connected to mongoDB')
     } catch (error) {
-        console.log('ket noi database that bai');
+        console.log(error)
+        process.exit(1)
     }
 }
-module.exports = connectDatabase;
+
+module.exports = connectDB;
