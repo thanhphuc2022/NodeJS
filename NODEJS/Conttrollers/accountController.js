@@ -1,7 +1,8 @@
 const { json } = require('body-parser');
 const { ServerSession } = require('mongodb');
 const { startSession } = require('../Models/accountModel');
-const AccountModel = require('../Models/accountModel')//chứa khung schema account
+const AccountModel = require('../Models/accountModel');//chứa khung schema account
+const jwt = require('jsonwebtoken');
 
 function Register(request, response) {
     var username = request.body.username
@@ -53,11 +54,16 @@ function Register(request, response) {
         })
 }
 
+function getlogin(request, response) {
+    response.render('login');
+}
+
 function login(request, response) {
     var username = request.body.username
     var password = request.body.password
 
     errLogin = 0;
+    const token = jwt.sign({ username }, 'demonodejs');
 
     AccountModel.findOne({
         username: username,
@@ -73,10 +79,11 @@ function login(request, response) {
                 errLogin++
             }
             if (errLogin == 0) {
-                response.json({ success: true, message: 'Dang nhap thanh cong' })
+                // response.json({ success: true, message: 'Dang nhap thanh cong' })
                 // response.json('Dang nhap thanh cong')
                 // response.render('todo.ejs')
-                // response.render('todo')
+                response.render('todo.ejs', { datas: data })
+                // response.json({ token, toDo: data.toDo });
             }
         })
         .catch(function (err) {
@@ -240,6 +247,7 @@ function updateJob(request, response) {
 
 module.exports = {
     Register: Register,
+    getlogin: getlogin,
     login: login,
     getAccount: getAccount,
     getAccountID: getAccountID,

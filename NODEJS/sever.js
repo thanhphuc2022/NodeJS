@@ -16,7 +16,7 @@ app.use(express.static(__dirname + '/public')); //lấy css từ public
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-const AccountModal = require('./Models/accountModel');
+const AccountModel = require('./Models/accountModel');
 const { request, response } = require('express');
 const { json } = require('body-parser');
 
@@ -25,7 +25,12 @@ var accountRouter = require('./routers/accountRouter')
 // app.get('/index', (req, res) => { //định nghĩa route trang chủ
 //     res.render('index'); //trả về trang index
 // })
-// app.use('/api', accountRouter)
+app.use('/', accountRouter)
+
+// app.get('/login', (req, res) => {
+//     res.render('login');
+// })
+
 app.use('/api/account', accountRouter)
 
 // ()=> : function()

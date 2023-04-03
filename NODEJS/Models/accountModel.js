@@ -10,7 +10,7 @@ connectDatabase();
 const accountSchema = new mongoose.Schema({
     username: String,
     password: String,
-    toDo: Array
+    toDo: [String]
 }, {
     collection: 'Account'
 });

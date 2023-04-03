@@ -6,6 +6,8 @@ var accountController = require('../Conttrollers/accountController');
 
 router.post('/register', accountController.Register);
 
+router.get('/login', accountController.getlogin);
+
 router.post('/login', accountController.login);
 
 router.get('/', accountController.getAccount);
