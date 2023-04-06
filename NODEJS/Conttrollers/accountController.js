@@ -4,6 +4,10 @@ const { startSession } = require('../Models/accountModel');
 const AccountModel = require('../Models/accountModel');//chứa khung schema account
 const jwt = require('jsonwebtoken');
 
+function getRegister(request, response) {
+    response.render('register.ejs')
+}
+
 function Register(request, response) {
     var username = request.body.username
     var password = request.body.password
@@ -58,6 +62,8 @@ function getlogin(request, response) {
     response.render('login');
 }
 
+var user;//biến user toàn cục-lưu thông tin người dùng đăng nhập
+
 function login(request, response) {
     var username = request.body.username
     var password = request.body.password
@@ -80,11 +86,14 @@ function login(request, response) {
             }
             if (errLogin == 0) {
                 // response.json({ success: true, message: 'Dang nhap thanh cong' })
-                // response.json('Dang nhap thanh cong')
                 // response.render('todo.ejs')
                 response.render('todo.ejs', { datas: data })
                 // response.json({ token, toDo: data.toDo });
+                // response.json(data)
+
+                user = username //lưu username đã đăng nhập vào biến user
             }
+
         })
         .catch(function (err) {
             response.status(555).json('dang nhap that bai-Loi server')
@@ -95,8 +104,8 @@ function login(request, response) {
 function getAccount(request, response) {
     AccountModel.find({})
         .then(function (data) {
-            // response.render('account', { datas: data });
-            response.json(data);
+            response.render('account', { datas: data });
+            // response.json(data);
             // request.body()
         })
         .catch(function (err) {
@@ -206,15 +215,20 @@ function deleteAccountID(request, response) {
         })
 }
 
+
 function createJob(request, response) {
-    var id = request.params.id
-    var job = request.body.job
+    var username = user //gán biến user chứa username đã đăng nhập vào username
 
-    AccountModel.updateOne(
-        { _id: id },
-        { $push: { toDo: job } }
+    // var idd = request.body.idd
+    // var job = request.body.job
+
+    var item = { id: request.body.id, job: request.body.job }
+
+    // var item = { id, job }
+    AccountModel.collection.updateOne(
+        { username: username },
+        { $push: { toDo: item } }
     )
-
         .then(function (data) {
             response.json('Them job thanh cong ')
         })
@@ -223,29 +237,37 @@ function createJob(request, response) {
         })
 }
 
-function updateJob(request, response) {
-    // var username = ServerSession.AccountModel.username
-    var id = request.params.id
-    var job = request.body.job
+function getupdateJob(request, response) {
+    var username = user
 
-    AccountModel.findByIdAndUpdate(id, {
-        toDo: job
-    })
+    AccountModel.findOneAndUpdate(username)
         .then(function (data) {
-            response.json('update job thanh cong ')
+            response.render('updatetodo.ejs', { datas: data })
         })
-        .catch((err) => {
-            response.status(500).json('that bai')
+        .catch(function (err) {
+            response.status(500).json('Loi sever')
         })
+}
 
+function postupdateJob(request, response) {
+    // var username = ServerSession.AccountModel.username
 
+    // var id = request.params.id
+    // var newjob = request.body.newjob
 
-
-
-
+    // AccountModel.findByIdAndUpdate(id, {
+    //     toDo: job
+    // })
+    //     .then(function (data) {
+    //         response.json('update job thanh cong ')
+    //     })
+    //     .catch((err) => {
+    //         response.status(500).json('that bai')
+    //     })
 }
 
 module.exports = {
+    getRegister: getRegister,
     Register: Register,
     getlogin: getlogin,
     login: login,
@@ -256,6 +278,7 @@ module.exports = {
     getAccountEdit: getAccountEdit,
     putAccountID: putAccountID,
     deleteAccountID: deleteAccountID,
-    updateJob: updateJob,
+    getupdateJob: getupdateJob,
+    postupdateJob: postupdateJob,
     createJob: createJob
 }

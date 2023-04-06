@@ -10,11 +10,16 @@ connectDatabase();
 const accountSchema = new mongoose.Schema({
     username: String,
     password: String,
-    toDo: [String]
+    toDo: [
+        {
+            id: String,
+            job: String
+        }
+    ]
 }, {
     collection: 'Account'
 });
-const AccountModel = mongoose.model('account', accountSchema);
+const AccountModel = mongoose.model('Account', accountSchema); //(account)
 
 module.exports = AccountModel
 /////////////////////create///////////////////////

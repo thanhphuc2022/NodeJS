@@ -15,18 +15,58 @@
 </style>
 
 <body>
-    <form action="/createjob" method="post">
+    <form action="/account/createjob" method="post">
         <label>Cong viec</label>
+        <input type="text" name="id" />
         <input type="text" name="job" />
         <button type="submit">Create</button>
     </form>
 
     <h2>To-Do List</h2>
-    <ul id="to-do-list">
-        <li>
-            <%= datas.toDo %>
-        </li>
-    </ul>
+
+    <!-- <ul>
+        <% datas.toDo.forEach(function(item) { %>
+            <li>
+                <%= item.id %> - <%= item.job %>
+            </li>
+            <% }); %>
+    </ul> -->
+
+
+    <table style="width:100%">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>job</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% datas.toDo.forEach(function(item) { %>
+                <tr>
+                    <td>
+                        <%= item.id %>
+                    </td>
+                    <td>
+                        <%= item.job %>
+                    </td>
+                    <th>
+                        <form action="/account/editjob/<%= datas.username %>" method="get">
+                            <button type="submit">Edit</button>
+                        </form>
+                        <form action="/account/delete/<%= item.id %>" method="post">
+                            <button type="submit">Delete</button>
+                        </form>
+
+                        <!-- <button type="submit">Edit</button>
+                        <button type="submit">Delete</button> -->
+                    </th>
+                </tr>
+                <% }); %>
+        </tbody>
+    </table>
+
+
 
 </body>
 
