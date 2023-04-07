@@ -86,9 +86,9 @@ function login(request, response) {
             }
             if (errLogin == 0) {
                 // response.json({ success: true, message: 'Dang nhap thanh cong' })
-                // response.render('todo.ejs')
                 response.render('todo.ejs', { datas: data })
                 // response.json({ token, toDo: data.toDo });
+                // response.json({ toDo: data.toDo }); //trả về toDolish
                 // response.json(data)
 
                 user = username //lưu username đã đăng nhập vào biến user
@@ -99,7 +99,6 @@ function login(request, response) {
             response.status(555).json('dang nhap that bai-Loi server')
         })
 }
-
 
 function getAccount(request, response) {
     AccountModel.find({})
@@ -237,33 +236,52 @@ function createJob(request, response) {
         })
 }
 
-function getupdateJob(request, response) {
+async function getupdateJob(request, response) {
     var username = user
+    // var username = request.params.username
+    const userData = await AccountModel.collection.findOne({ username: username });
+    const idToFind = request.params.username;
+    // const userdata = AccountModel.findOne({ username: username })
+    const toDolist = userData.toDo
+    const foundItem = toDolist.find(item => item.id === idToFind);
 
-    AccountModel.findOneAndUpdate(username)
-        .then(function (data) {
-            response.render('updatetodo.ejs', { datas: data })
-        })
-        .catch(function (err) {
-            response.status(500).json('Loi sever')
-        })
+    if (foundItem) {
+        response.render('updatetodo.ejs', { foundItem })
+    } else {
+        response.status(500).json('Loi sever')
+    }
 }
 
 function postupdateJob(request, response) {
-    // var username = ServerSession.AccountModel.username
+    var username = user
+    const id = request.params.username;
+    var newjob = request.body.newjob
 
-    // var id = request.params.id
-    // var newjob = request.body.newjob
+    AccountModel.collection.updateOne(
+        { "toDo.id": id },
+        { $set: { "toDo.$.job": newjob } }
+    )
+        .then(function (data) {
+            response.json('update job thanh cong ')
+        })
+        .catch((err) => {
+            response.status(500).json('that bai')
+        })
+}
 
-    // AccountModel.findByIdAndUpdate(id, {
-    //     toDo: job
-    // })
-    //     .then(function (data) {
-    //         response.json('update job thanh cong ')
-    //     })
-    //     .catch((err) => {
-    //         response.status(500).json('that bai')
-    //     })
+function deleteJob(request, response) {
+    const id = request.params.username
+
+    AccountModel.collection.updateOne(
+        { "toDo.id": id },
+        { $pull: { "toDo": { "id": id } } }
+    )
+        .then(function (data) {
+            response.json('Xoa thanh cong')
+        })
+        .catch(function (err) {
+            response.status(500).json('Loi server')
+        })
 }
 
 module.exports = {
@@ -280,5 +298,6 @@ module.exports = {
     deleteAccountID: deleteAccountID,
     getupdateJob: getupdateJob,
     postupdateJob: postupdateJob,
-    createJob: createJob
+    createJob: createJob,
+    deleteJob: deleteJob
 }

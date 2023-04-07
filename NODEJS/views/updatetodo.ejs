@@ -9,11 +9,11 @@
 
 <body>
 
-    <form action="/account/editjob/<%= datas.username %>" method="post">
+    <form action="/account/editjob/<%= foundItem.id %>" method="post">
         <label for="fname">Id:</label><br>
-        <input type="text" id="fname" name="id" disabled value="<%= datas.id %>"><br>
+        <input type="text" id="fname" name="id" disabled value="<%= foundItem.id %>"><br>
         <label for="lname">Job:</label><br>
-        <input type="text" id="lname" name="job" value="<%= datas.job %>"><br><br>
+        <input type="text" id="lname" name="job" value="<%= foundItem.job %>"><br><br>
         <label for="lname">Newjob:</label><br>
         <input type="text" id="lname" name="newjob"><br><br>
         <input type="submit" value="Edit">

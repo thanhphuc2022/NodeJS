@@ -26,10 +26,12 @@ router.post('/edit/:id', accountController.putAccountID); //update theo id
 
 router.post('/delete/:id', accountController.deleteAccountID); //xoa theo id
 
-router.get('/editjob/:id', accountController.getupdateJob);
+router.get('/editjob/:username', accountController.getupdateJob);
 
-router.post('/editjob/:id', accountController.postupdateJob);
+router.post('/editjob/:username', accountController.postupdateJob);
 
-router.post('/:id', accountController.createJob);
+router.post('/createjob', accountController.createJob);
+
+router.post('/deletejob/:username', accountController.deleteJob);
 
 module.exports = router

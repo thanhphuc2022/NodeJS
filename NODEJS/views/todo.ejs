@@ -51,10 +51,10 @@
                         <%= item.job %>
                     </td>
                     <th>
-                        <form action="/account/editjob/<%= datas.username %>" method="get">
+                        <form action="/account/editjob/<%= item.id %>" method="get">
                             <button type="submit">Edit</button>
                         </form>
-                        <form action="/account/delete/<%= item.id %>" method="post">
+                        <form action="/account/deletejob/<%= item.id %>" method="post">
                             <button type="submit">Delete</button>
                         </form>
 
