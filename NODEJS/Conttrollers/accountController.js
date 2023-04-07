@@ -284,6 +284,21 @@ function deleteJob(request, response) {
         })
 }
 
+function toDojob(request, response) {
+    username = user
+    AccountModel.findOne(
+        { username: username },
+
+    )
+        .then(function (data) {
+            response.json({ toDo: data.toDo });
+            // console.log(result.toDo);
+        })
+        .catch(function (err) {
+            response.status(555).json('dang nhap that bai-Loi server')
+        })
+}
+
 module.exports = {
     getRegister: getRegister,
     Register: Register,
@@ -299,5 +314,6 @@ module.exports = {
     getupdateJob: getupdateJob,
     postupdateJob: postupdateJob,
     createJob: createJob,
-    deleteJob: deleteJob
+    deleteJob: deleteJob,
+    toDojob: toDojob
 }

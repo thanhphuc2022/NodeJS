@@ -12,9 +12,9 @@ router.get('/login', accountController.getlogin);
 
 router.post('/login', accountController.login);
 
-router.get('/', accountController.getAccount);
+// router.get('/', accountController.getAccount);
 
-router.get('/:id', accountController.getAccountID); //lay theo id
+// router.get('/:id', accountController.getAccountID); //lay theo id
 
 router.get('/aa', accountController.getAccountCreate);
 
@@ -33,5 +33,7 @@ router.post('/editjob/:username', accountController.postupdateJob);
 router.post('/createjob', accountController.createJob);
 
 router.post('/deletejob/:username', accountController.deleteJob);
+
+router.get('/todolish', accountController.toDojob);
 
 module.exports = router
