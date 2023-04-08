@@ -218,22 +218,30 @@ function deleteAccountID(request, response) {
 function createJob(request, response) {
     var username = user //gán biến user chứa username đã đăng nhập vào username
 
-    // var idd = request.body.idd
-    // var job = request.body.job
-
-    var item = { id: request.body.id, job: request.body.job }
-
-    // var item = { id, job }
-    AccountModel.collection.updateOne(
-        { username: username },
-        { $push: { toDo: item } }
-    )
-        .then(function (data) {
-            response.json('Them job thanh cong ')
-        })
-        .catch((err) => {
-            response.status(500).json('that bai')
-        })
+    const query = {
+        username: username,
+        'toDo.id': request.body.id,
+    };
+    AccountModel.collection.findOne(query, (err, result) => { //bắt lỗi trùng id job
+        if (err) {
+            console.log(err);
+        } else if (result) {
+            response.status(500).json('trung id job')
+        } else {
+            // Thực hiện thêm item nếu không có lỗi trùng name
+            var item = { id: request.body.id, job: request.body.job }
+            AccountModel.collection.updateOne(
+                { username: username },
+                { $push: { toDo: item } }
+            )
+                .then(function (data) {
+                    response.json('Them job thanh cong ')
+                })
+                .catch((err) => {
+                    response.status(500).json('that bai')
+                })
+        }
+    });
 }
 
 async function getupdateJob(request, response) {
