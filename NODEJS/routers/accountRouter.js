@@ -34,6 +34,6 @@ router.post('/createjob', accountController.createJob);
 
 router.post('/deletejob/:username', accountController.deleteJob);
 
-router.get('/todolish', accountController.toDojob);
+router.get('/todolish/:username', accountController.toDojob);
 
 module.exports = router

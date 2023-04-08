@@ -285,7 +285,7 @@ function deleteJob(request, response) {
 }
 
 function toDojob(request, response) {
-    username = user
+    username = request.params.username
     AccountModel.findOne(
         { username: username },
 
