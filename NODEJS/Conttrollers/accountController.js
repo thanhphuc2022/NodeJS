@@ -1,8 +1,13 @@
+require("dotenv").config();
 const { json } = require('body-parser');
 const { ServerSession } = require('mongodb');
 const { startSession } = require('../Models/accountModel');
 const AccountModel = require('../Models/accountModel');//chứa khung schema account
 const jwt = require('jsonwebtoken');
+const { request, response } = require('express');
+const { generateAccessToken, generateRefreshToken } = require('../middleware/auth');
+
+let refreshTokens = [];
 
 function getRegister(request, response) {
     response.render('register.ejs')
@@ -64,12 +69,12 @@ function getlogin(request, response) {
 
 var user;//biến user toàn cục-lưu thông tin người dùng đăng nhập
 
-function login(request, response) {
+function login(request, response, next) {
     var username = request.body.username
     var password = request.body.password
 
     errLogin = 0;
-    const token = jwt.sign({ username }, 'demonodejs');
+    // const token = jwt.sign({ username }, 'demonodejs');
 
     AccountModel.findOne({
         username: username,
@@ -85,9 +90,28 @@ function login(request, response) {
                 errLogin++
             }
             if (errLogin == 0) {
+
+                const accessToken = jwt.sign({ username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "5m" });
+                const refreshToken = jwt.sign({ username }, process.env.JWT_SECRET_REFRESH, { expiresIn: "365d" });
+
+                //lưu refreshToken vao array
+                refreshTokens.push(refreshToken);
+
+
+                AccountModel.collection.findOneAndUpdate(
+                    { username: username },
+                    { $set: { refreshtoken: refreshToken } }
+                )
+
+                response.cookie("refreshToken", refreshToken, {
+                    httpOnly: true,
+                    secure: false,
+                    path: "/",
+                    sameSite: "strict",
+                })
                 // response.json({ success: true, message: 'Dang nhap thanh cong' })
-                response.render('todo.ejs', { datas: data })
-                // response.json({ token, toDo: data.toDo });
+                // response.render('todo.ejs', { datas: data })////////////////////////////////o day
+                response.json({ accessToken, toDo: data.toDo });
                 // response.json({ toDo: data.toDo }); //trả về toDolish
                 // response.json(data)
 
@@ -96,6 +120,7 @@ function login(request, response) {
 
         })
         .catch(function (err) {
+            console.log(err)
             response.status(555).json('dang nhap that bai-Loi server')
         })
 }
@@ -214,7 +239,6 @@ function deleteAccountID(request, response) {
         })
 }
 
-
 function createJob(request, response) {
     var username = user //gán biến user chứa username đã đăng nhập vào username
 
@@ -292,19 +316,60 @@ function deleteJob(request, response) {
         })
 }
 
-function toDojob(request, response) {
+function toDojob(request, response, next) {
     username = request.params.username
     AccountModel.findOne(
         { username: username },
-
     )
         .then(function (data) {
             response.json({ toDo: data.toDo });
             // console.log(result.toDo);
         })
         .catch(function (err) {
-            response.status(555).json('dang nhap that bai-Loi server')
+            return response.json(err)
+            // response.status(555).json('dang nhap that bai-Loi server')
         })
+}
+
+async function requestRefreshToken(request, response) {
+    const refreshToken = request.cookies.refreshToken;
+    if (!refreshToken) {
+        return response.status(401).json("You're not authenticated");
+    }
+    // if (!refreshTokens.includes(refreshToken)) {
+    //     return response.status(403).json("Refresh token is not valid");
+    // }
+
+    AccountModel.findOne({
+        refreshtoken: refreshToken
+    })
+        .then(function (data) {
+            if (!data) {
+                response.status(403).json("Refresh token is not valid");
+            }
+        })
+
+    jwt.verify(refreshToken, "refreshtoken", (err, data) => {
+        if (err) {
+            console.log(err)
+        }
+        // refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+
+        //tao moi accessToken, refreshToken
+        const newAccessToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "5m" });
+        const newRefreshToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_REFRESH, { expiresIn: "365d" });
+        //luu newrefreshToken vao array
+        // refreshTokens.push(newRefreshToken);
+        AccountModel.findOneAndUpdate(data.username, { refreshtoken: newRefreshToken })
+        //luu refreshToken vao cookie
+        response.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: false,
+            path: "/",
+            sameSite: "strict",
+        })
+        response.json({ accessToken: newAccessToken })
+    })
 }
 
 module.exports = {
@@ -323,5 +388,6 @@ module.exports = {
     postupdateJob: postupdateJob,
     createJob: createJob,
     deleteJob: deleteJob,
-    toDojob: toDojob
+    toDojob: toDojob,
+    requestRefreshToken: requestRefreshToken
 }
