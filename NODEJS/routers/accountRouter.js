@@ -13,7 +13,7 @@ router.get('/login', accountController.getlogin);
 
 router.post('/login', accountController.login);
 
-// router.get('/', createJWT, accountController.getAccount);
+router.get('/', createJWT, accountController.getAccount);
 
 // router.get('/:id', accountController.getAccountID); //lay theo id
 

@@ -6,12 +6,37 @@ const AccountModel = require('../Models/accountModel');//chứa khung schema acc
 const jwt = require('jsonwebtoken');
 const { request, response } = require('express');
 const { generateAccessToken, generateRefreshToken } = require('../middleware/auth');
-
+const bcrypt = require('bcryptjs');
+const CryptoJS = require('crypto-js');
 let refreshTokens = [];
 
 function getRegister(request, response) {
     response.render('register.ejs')
 }
+
+//HÀM MÃ HÓA MẬT KHẨU
+function encryptPassword(password, salt) {
+    // mã hóa SHA256 cho mật khẩu
+    const hashedPassword = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
+    // tạo key từ mật khẩu đã được mã hóa SHA256 và salt
+    const key = CryptoJS.PBKDF2(hashedPassword, CryptoJS.enc.Hex.parse(salt), {
+        keySize: 64 / 8,
+        iterations: 1000,
+    });
+    // sử dụng AES để mã hóa mật khẩu
+    const encryptedPassword = CryptoJS.AES.encrypt(hashedPassword, key, {
+        mode: CryptoJS.mode.CBC,
+        iv: CryptoJS.enc.Hex.parse(salt),
+    });
+    // trả về đối tượng chứa mật khẩu đã được mã hóa và salt
+    return {
+        password: encryptedPassword.toString(),
+        salt,
+    };
+}
+
+
+
 
 function Register(request, response) {
     var username = request.body.username
@@ -47,9 +72,16 @@ function Register(request, response) {
                 errRgt++
             }
             if (errRgt == 0) {
+
+                // tạo salt ngẫu nhiên
+                const salt = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+                // mã hóa mật khẩu với salt
+                const encryptedPassword = encryptPassword(password, salt);
+
                 AccountModel.create({
                     username: username,
-                    password: password
+                    password: encryptedPassword.password,
+                    salt: encryptedPassword.salt,
                 })
                 response.json({ success: true, message: 'tao tai khoan thanh cong' })
             }
@@ -69,29 +101,32 @@ function getlogin(request, response) {
 
 var user;//biến user toàn cục-lưu thông tin người dùng đăng nhập
 
-function login(request, response, next) {
+async function login(request, response, next) {
     var username = request.body.username
     var password = request.body.password
 
     errLogin = 0;
-    // const token = jwt.sign({ username }, 'demonodejs');
 
-    AccountModel.findOne({
+    const use = await AccountModel.findOne({
         username: username,
-        password: password
     })
-        .then(function (data) {
+        .then(function (use) {
             if (username == '' || password == '') {
                 response.status(500).json({ success: false, message: 'vui long nhap day du thong tin' })
                 errLogin++
             }
-            if (!data) {
+            if (!use) {
+                response.status(500).json({ success: false, message: 'username hoac password khong dung' })
+                errLogin++
+            }
+            const hashedPassword = encryptPassword(password, use.salt).password;
+            if (hashedPassword !== use.password) {
                 response.status(500).json({ success: false, message: 'username hoac password khong dung' })
                 errLogin++
             }
             if (errLogin == 0) {
 
-                const accessToken = jwt.sign({ username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "5m" });
+                const accessToken = jwt.sign({ username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "30s" });
                 const refreshToken = jwt.sign({ username }, process.env.JWT_SECRET_REFRESH, { expiresIn: "365d" });
 
                 //lưu refreshToken vao array
@@ -111,7 +146,7 @@ function login(request, response, next) {
                 })
                 // response.json({ success: true, message: 'Dang nhap thanh cong' })
                 // response.render('todo.ejs', { datas: data })////////////////////////////////o day
-                response.json({ accessToken, toDo: data.toDo });
+                return response.json({ accessToken, refreshToken, toDo: use.toDo });
                 // response.json({ toDo: data.toDo }); //trả về toDolish
                 // response.json(data)
 
@@ -121,7 +156,7 @@ function login(request, response, next) {
         })
         .catch(function (err) {
             console.log(err)
-            response.status(555).json('dang nhap that bai-Loi server')
+            // response.status(555).json('dang nhap that bai-Loi server')
         })
 }
 
@@ -333,6 +368,7 @@ function toDojob(request, response, next) {
 
 async function requestRefreshToken(request, response) {
     const refreshToken = request.cookies.refreshToken;
+    // const refreshToken = request.body.refreshToken;
     if (!refreshToken) {
         return response.status(401).json("You're not authenticated");
     }
@@ -356,7 +392,7 @@ async function requestRefreshToken(request, response) {
         // refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
 
         //tao moi accessToken, refreshToken
-        const newAccessToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "5m" });
+        const newAccessToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "30s" });
         const newRefreshToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_REFRESH, { expiresIn: "365d" });
         //luu newrefreshToken vao array
         // refreshTokens.push(newRefreshToken);
