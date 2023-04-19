@@ -10,7 +10,6 @@ connectDatabase();
 const accountSchema = new mongoose.Schema({
     username: String,
     password: String,
-    salt: String,
     refreshtoken: String,
     toDo: [
         {

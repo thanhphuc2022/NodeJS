@@ -14,85 +14,60 @@ function getRegister(request, response) {
     response.render('register.ejs')
 }
 
-//HÀM MÃ HÓA MẬT KHẨU
-function encryptPassword(password, salt) {
-    // mã hóa SHA256 cho mật khẩu
-    const hashedPassword = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-    // tạo key từ mật khẩu đã được mã hóa SHA256 và salt
-    const key = CryptoJS.PBKDF2(hashedPassword, CryptoJS.enc.Hex.parse(salt), {
-        keySize: 64 / 8,
-        iterations: 1000,
-    });
-    // sử dụng AES để mã hóa mật khẩu
-    const encryptedPassword = CryptoJS.AES.encrypt(hashedPassword, key, {
-        mode: CryptoJS.mode.CBC,
-        iv: CryptoJS.enc.Hex.parse(salt),
-    });
-    // trả về đối tượng chứa mật khẩu đã được mã hóa và salt
-    return {
-        password: encryptedPassword.toString(),
-        salt,
-    };
-}
+async function Register(request, response) {
+    try {
+        var username = request.body.username
+        var password = request.body.password
+        var repassword = request.body.repassword
 
-
-
-
-function Register(request, response) {
-    var username = request.body.username
-    var password = request.body.password
-    var repassword = request.body.repassword
-
-    const usernameRegex = /^[a-zA-Z0-9_.]{3,20}$/;
-    const passwordRegex = /^.{8,}$/;
-    errRgt = 0
-    //bat su kien trung ten dang nhap
-    AccountModel.findOne({
-        username: username
-    })
-        .then(function (data) {
-            if (username == '' || password == '' || repassword == '') {
-                return response.json({ success: false, message: 'vui long dien day du thong tin' });
-                errRgt++
-            }
-            if (data) {
-                return response.json({ success: false, message: 'username da duoc su dung' });
-                errRgt++
-            }
-            if (password != repassword) {
-                return response.json({ success: false, message: 'Mat khau khong trung khop' });
-                errRgt++
-            }
-            if (!usernameRegex.test(username)) {
-                return response.json({ success: false, message: 'username khong hop le' });
-                errRgt++
-            }
-            if (!passwordRegex.test(password)) {
-                return response.json({ success: false, message: 'mat khau it nhat 8 ki tu ' });
-                errRgt++
-            }
-            if (errRgt == 0) {
-
-                // tạo salt ngẫu nhiên
-                const salt = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-                // mã hóa mật khẩu với salt
-                const encryptedPassword = encryptPassword(password, salt);
-
-                AccountModel.create({
-                    username: username,
-                    password: encryptedPassword.password,
-                    salt: encryptedPassword.salt,
-                })
-                response.json({ success: true, message: 'tao tai khoan thanh cong' })
-            }
-
+        const usernameRegex = /^[a-zA-Z0-9_.]{3,20}$/;
+        const passwordRegex = /^.{8,}$/;
+        errRgt = 0
+        //bat su kien trung ten dang nhap
+        AccountModel.findOne({
+            username: username
         })
-        // .then(function (data) {
-        //     response.json('tao tai khoan thanh cong')
-        // })
-        .catch(function (error) {
-            response.status(555).json('tao tai khoan that bai')
-        })
+            .then(async function (data) {
+                if (username == '' || password == '' || repassword == '') {
+                    return response.json({ success: false, message: 'vui long dien day du thong tin' });
+                    errRgt++
+                }
+                if (data) {
+                    return response.json({ success: false, message: 'username da duoc su dung' });
+                    errRgt++
+                }
+                if (password != repassword) {
+                    return response.json({ success: false, message: 'Mat khau khong trung khop' });
+                    errRgt++
+                }
+                if (!usernameRegex.test(username)) {
+                    return response.json({ success: false, message: 'username khong hop le' });
+                    errRgt++
+                }
+                if (!passwordRegex.test(password)) {
+                    return response.json({ success: false, message: 'mat khau it nhat 8 ki tu ' });
+                    errRgt++
+                }
+                if (errRgt == 0) {
+                    //mã hóa mật khẩu
+                    const salt = await bcrypt.genSalt(10);
+                    const hashedPassword = await bcrypt.hash(password, salt);
+                    //lưu user đã được mã hóa mk
+                    AccountModel.create({
+                        username: username,
+                        password: hashedPassword
+                    })
+                    response.json({ success: true, message: 'tao tai khoan thanh cong' })
+                }
+
+            })
+            .catch(function (error) {
+                response.status(555).json('tao tai khoan that bai')
+            })
+    }
+    catch (error) {
+        response.status(555).json('Loi server')
+    }
 }
 
 function getlogin(request, response) {
@@ -110,7 +85,7 @@ async function login(request, response, next) {
     const use = await AccountModel.findOne({
         username: username,
     })
-        .then(function (use) {
+        .then(async function (use) {
             if (username == '' || password == '') {
                 response.status(500).json({ success: false, message: 'vui long nhap day du thong tin' })
                 errLogin++
@@ -119,8 +94,8 @@ async function login(request, response, next) {
                 response.status(500).json({ success: false, message: 'username hoac password khong dung' })
                 errLogin++
             }
-            const hashedPassword = encryptPassword(password, use.salt).password;
-            if (hashedPassword !== use.password) {
+            const isMatch = await bcrypt.compare(password, use.password);
+            if (!isMatch) {
                 response.status(500).json({ success: false, message: 'username hoac password khong dung' })
                 errLogin++
             }
@@ -131,7 +106,6 @@ async function login(request, response, next) {
 
                 //lưu refreshToken vao array
                 refreshTokens.push(refreshToken);
-
 
                 AccountModel.collection.findOneAndUpdate(
                     { username: username },
@@ -145,8 +119,8 @@ async function login(request, response, next) {
                     sameSite: "strict",
                 })
                 // response.json({ success: true, message: 'Dang nhap thanh cong' })
-                // response.render('todo.ejs', { datas: data })////////////////////////////////o day
-                return response.json({ accessToken, refreshToken, toDo: use.toDo });
+                // response.render('todo.ejs', { datas: use })////////////////////////////////o day
+                response.json({ accessToken, refreshToken, toDo: use.toDo });
                 // response.json({ toDo: data.toDo }); //trả về toDolish
                 // response.json(data)
 
@@ -366,46 +340,77 @@ function toDojob(request, response, next) {
         })
 }
 
+// async function requestRefreshToken(request, response) {
+//     const refreshToken = request.cookies.refreshToken;
+//     // const refreshToken = request.body.refreshToken;
+//     if (!refreshToken) {
+//         return response.status(401).json("You're not authenticated");
+//     }
+//     // if (!refreshTokens.includes(refreshToken)) {
+//     //     return response.status(403).json("Refresh token is not valid");
+//     // }
+
+//     AccountModel.findOne({
+//         refreshtoken: refreshToken
+//     })
+//         .then(function (data) {
+//             if (!data) {
+//                 return response.status(403).json("Refresh token is not valid");
+//             }
+//         })
+
+//     jwt.verify(refreshToken, "refreshtoken", (err, data) => {
+//         if (err) {
+//             console.log(err)
+//         }
+//         // refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+
+//         //tao moi accessToken, refreshToken
+//         const newAccessToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "30s" });
+//         const newRefreshToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_REFRESH, { expiresIn: "365d" });
+//         //luu newrefreshToken vao array
+//         // refreshTokens.push(newRefreshToken);
+//         AccountModel.findOneAndUpdate(data.username, { refreshtoken: newRefreshToken })
+//         //luu refreshToken vao cookie
+//         response.cookie("refreshToken", newRefreshToken, {
+//             httpOnly: true,
+//             secure: false,
+//             path: "/",
+//             sameSite: "strict",
+//         })
+//         response.json({ accessToken: newAccessToken })
+//     })
+// }
+
 async function requestRefreshToken(request, response) {
-    const refreshToken = request.cookies.refreshToken;
-    // const refreshToken = request.body.refreshToken;
-    if (!refreshToken) {
-        return response.status(401).json("You're not authenticated");
-    }
-    // if (!refreshTokens.includes(refreshToken)) {
-    //     return response.status(403).json("Refresh token is not valid");
-    // }
-
-    AccountModel.findOne({
-        refreshtoken: refreshToken
-    })
-        .then(function (data) {
-            if (!data) {
-                response.status(403).json("Refresh token is not valid");
-            }
-        })
-
-    jwt.verify(refreshToken, "refreshtoken", (err, data) => {
-        if (err) {
-            console.log(err)
+    try {
+        const refreshToken = request.cookies.refreshToken;
+        const existingToken = await AccountModel.findOne({ refreshtoken: refreshToken });
+        if (!refreshToken) {
+            return response.status(401).json("You're not authenticated");
         }
-        // refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+        if (!existingToken) {
+            return response.status(403).json("Refresh token is not valid");
+        }
 
-        //tao moi accessToken, refreshToken
-        const newAccessToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "30s" });
-        const newRefreshToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_REFRESH, { expiresIn: "365d" });
-        //luu newrefreshToken vao array
-        // refreshTokens.push(newRefreshToken);
-        AccountModel.findOneAndUpdate(data.username, { refreshtoken: newRefreshToken })
+        const decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH);
+        const new_accessToken = jwt.sign({ user: decodedToken.user }, process.env.JWT_SECRET_ACCESS, { expiresIn: '30s' });
+        const new_refreshToken = jwt.sign({ user: decodedToken.user }, process.env.JWT_SECRET_REFRESH);
+        await AccountModel.findOneAndUpdate(user, { refreshtoken: new_refreshToken })
+
         //luu refreshToken vao cookie
-        response.cookie("refreshToken", newRefreshToken, {
+        response.cookie("refreshToken", new_refreshToken, {
             httpOnly: true,
             secure: false,
             path: "/",
             sameSite: "strict",
         })
-        response.json({ accessToken: newAccessToken })
-    })
+
+        response.json(new_accessToken)
+    } catch (error) {
+        console.log(error)
+        // throw new Error('Unable to request refresh token');
+    }
 }
 
 module.exports = {
