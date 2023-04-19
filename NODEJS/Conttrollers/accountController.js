@@ -101,11 +101,11 @@ async function login(request, response, next) {
             }
             if (errLogin == 0) {
 
-                const accessToken = jwt.sign({ username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "30s" });
-                const refreshToken = jwt.sign({ username }, process.env.JWT_SECRET_REFRESH, { expiresIn: "365d" });
+                // const accessToken = jwt.sign({ username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "30s" });
+                // const refreshToken = jwt.sign({ username }, process.env.JWT_SECRET_REFRESH, { expiresIn: "365d" });
 
-                //lưu refreshToken vao array
-                refreshTokens.push(refreshToken);
+                const accessToken = generateAccessToken(username);
+                const refreshToken = generateRefreshToken(username);
 
                 AccountModel.collection.findOneAndUpdate(
                     { username: username },
@@ -340,51 +340,12 @@ function toDojob(request, response, next) {
         })
 }
 
-// async function requestRefreshToken(request, response) {
-//     const refreshToken = request.cookies.refreshToken;
-//     // const refreshToken = request.body.refreshToken;
-//     if (!refreshToken) {
-//         return response.status(401).json("You're not authenticated");
-//     }
-//     // if (!refreshTokens.includes(refreshToken)) {
-//     //     return response.status(403).json("Refresh token is not valid");
-//     // }
-
-//     AccountModel.findOne({
-//         refreshtoken: refreshToken
-//     })
-//         .then(function (data) {
-//             if (!data) {
-//                 return response.status(403).json("Refresh token is not valid");
-//             }
-//         })
-
-//     jwt.verify(refreshToken, "refreshtoken", (err, data) => {
-//         if (err) {
-//             console.log(err)
-//         }
-//         // refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
-
-//         //tao moi accessToken, refreshToken
-//         const newAccessToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_ACCESS, { expiresIn: "30s" });
-//         const newRefreshToken = jwt.sign({ username: data.username }, process.env.JWT_SECRET_REFRESH, { expiresIn: "365d" });
-//         //luu newrefreshToken vao array
-//         // refreshTokens.push(newRefreshToken);
-//         AccountModel.findOneAndUpdate(data.username, { refreshtoken: newRefreshToken })
-//         //luu refreshToken vao cookie
-//         response.cookie("refreshToken", newRefreshToken, {
-//             httpOnly: true,
-//             secure: false,
-//             path: "/",
-//             sameSite: "strict",
-//         })
-//         response.json({ accessToken: newAccessToken })
-//     })
-// }
-
 async function requestRefreshToken(request, response) {
     try {
-        const refreshToken = request.cookies.refreshToken;
+        const authHeader = request.headers.authorization;
+        const refreshToken = authHeader && authHeader.split(" ")[1];
+
+        // const refreshToken = request.headers.authorization;
         const existingToken = await AccountModel.findOne({ refreshtoken: refreshToken });
         if (!refreshToken) {
             return response.status(401).json("You're not authenticated");
@@ -394,8 +355,10 @@ async function requestRefreshToken(request, response) {
         }
 
         const decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH);
-        const new_accessToken = jwt.sign({ user: decodedToken.user }, process.env.JWT_SECRET_ACCESS, { expiresIn: '30s' });
-        const new_refreshToken = jwt.sign({ user: decodedToken.user }, process.env.JWT_SECRET_REFRESH);
+        const new_accessToken = generateAccessToken(decodedToken.user);
+        const new_refreshToken = generateRefreshToken(decodedToken.user);
+
+        //lưu refreshtoken vào database
         await AccountModel.findOneAndUpdate(user, { refreshtoken: new_refreshToken })
 
         //luu refreshToken vao cookie

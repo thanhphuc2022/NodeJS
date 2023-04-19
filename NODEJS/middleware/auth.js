@@ -18,6 +18,16 @@ const createJWT = (request, response, next) => {
     }
 }
 
+function generateAccessToken(user) {
+    return jwt.sign({ user }, process.env.JWT_SECRET_ACCESS, { expiresIn: '30s' });
+}
+
+function generateRefreshToken(user) {
+    return jwt.sign({ user }, process.env.JWT_SECRET_REFRESH, { expiresIn: '365d' });
+}
+
 module.exports = {
     createJWT,
+    generateAccessToken,
+    generateRefreshToken
 }
