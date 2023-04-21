@@ -250,7 +250,7 @@ function deleteAccountID(request, response) {
 
 function createJob(request, response) {
     var username = user //gán biến user chứa username đã đăng nhập vào username
-
+    // var username = request.params.username
     const query = {
         username: username,
         'toDo.id': request.body.id,
@@ -294,12 +294,13 @@ async function getupdateJob(request, response) {
 }
 
 function postupdateJob(request, response) {
-    var username = user
-    const id = request.params.username;
+    // var username = user
+    const username = request.params.username
+    const id = request.params.id
     var newjob = request.body.newjob
 
     AccountModel.collection.updateOne(
-        { "toDo.id": id },
+        { username: username, "toDo.id": id },
         { $set: { "toDo.$.job": newjob } }
     )
         .then(function (data) {
@@ -311,10 +312,12 @@ function postupdateJob(request, response) {
 }
 
 function deleteJob(request, response) {
-    const id = request.params.username
+    const username = request.params.username
+    const id = request.params.id
 
     AccountModel.collection.updateOne(
-        { "toDo.id": id },
+        { username: username },
+        // { "toDo.id": id },
         { $pull: { "toDo": { "id": id } } }
     )
         .then(function (data) {

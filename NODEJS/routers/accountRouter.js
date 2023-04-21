@@ -29,11 +29,11 @@ router.post('/delete/:id', accountController.deleteAccountID); //xoa theo id
 
 router.get('/editjob/:username', createJWT, accountController.getupdateJob);
 
-router.post('/editjob/:username', createJWT, accountController.postupdateJob);
+router.post('/editjob/:username/:id', createJWT, accountController.postupdateJob);
 
-router.post('/createjob', createJWT, accountController.createJob);
+router.post('/createjob/:username', createJWT, accountController.createJob);
 
-router.post('/deletejob/:username', createJWT, accountController.deleteJob);
+router.post('/deletejob/:username/:id', createJWT, accountController.deleteJob);
 
 router.get('/todolish/:username', createJWT, accountController.toDojob);
 
