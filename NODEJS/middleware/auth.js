@@ -13,7 +13,7 @@ const createJWT = (req, res, next) => {
             return res.status(403).json("Token is not valid");
         }
         if (decodedToken.user !== req.params.username) {
-            return res.status(403).send("Bạn không được phép truy cập vào todolist của người dùng khác!");
+            return res.status(403).send("You're not authenticated!");
         }
         req.username = decodedToken.user;
         next();
